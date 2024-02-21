@@ -7,6 +7,7 @@ use namada::core::storage::{BlockHash, BlockResults, Epoch, Header};
 use namada::governance::pgf::inflation as pgf_inflation;
 use namada::ledger::events::EventType;
 use namada::ledger::gas::GasMetering;
+use namada::ledger::ibc;
 use namada::ledger::pos::namada_proof_of_stake;
 use namada::ledger::protocol::WrapperArgs;
 use namada::proof_of_stake;
@@ -113,6 +114,8 @@ where
             votes,
             req.byzantine_validators,
         )?;
+        // - IBC
+        ibc::finalize_block(&mut self.state, emit_events, new_epoch)?;
 
         // Take IBC events that may be emitted from PGF
         for ibc_event in self.state.write_log_mut().take_ibc_events() {
