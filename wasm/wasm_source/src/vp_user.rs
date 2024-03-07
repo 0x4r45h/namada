@@ -655,10 +655,15 @@ mod tests {
             token::Amount::native_whole(2),
             token::Amount::native_whole(3),
         );
+        let (sk1, sk2, sk3) = (
+            key::testing::keypair_2(),
+            key::testing::keypair_3(),
+            key::testing::keypair_4(),
+        );
         let (ck1, ck2, ck3) = (
-            key::testing::keypair_2().ref_to(),
-            key::testing::keypair_3().ref_to(),
-            key::testing::keypair_4().ref_to(),
+            sk1.ref_to(),
+            sk2.ref_to(),
+            sk3.ref_to(),
         );
         let genesis_validators = [
             GenesisValidator {
@@ -739,7 +744,7 @@ mod tests {
         tx_data.set_code(Code::new(vec![], None));
         tx_data.add_section(Section::Signature(Signature::new(
             vec![tx_data.raw_header_hash()],
-            pks_map.index_secret_keys(vec![key::testing::keypair_4()]),
+            pks_map.index_secret_keys(vec![sk3]),
             None,
         )));
         let signed_tx = tx_data.clone();
