@@ -1240,6 +1240,7 @@ impl<U: WalletIo> Wallet<U> {
     //         .map(Into::into)
     // }
 
+    // XXX REMOVE
     /// Add a new keypair with the given alias. If the alias is already used,
     /// will ask whether the existing alias should be replaced, a different
     /// alias is desired, or the alias creation should be cancelled. Return
@@ -1486,5 +1487,37 @@ impl<U: WalletIo + WalletStorage> Wallet<U> {
                 store.insert_address::<U>(alias.into(), address, force_alias);
         })?;
         Ok(addr_alias.map(Into::into))
+    }
+
+    /// Add a new keypair with the given alias. If the alias is already used,
+    /// will ask whether the existing alias should be replaced, a different
+    /// alias is desired, or the alias creation should be cancelled. Return
+    /// the chosen alias if the keypair has been added, otherwise return
+    /// nothing.
+    pub fn insert_keypair_atomic(
+        &mut self,
+        alias: String,
+        alias_force: bool,
+        sk: common::SecretKey,
+        password: Option<Zeroizing<String>>,
+        address: Option<Address>,
+        path: Option<DerivationPath>,
+    ) -> Result<Option<String>, LoadStoreError> {
+        let mut keypair_alias: Option<Alias> = Option::default();
+        self.utils.update_store(|store| {
+            keypair_alias = store.insert_keypair::<U>(
+                alias.into(),
+                sk.clone(),
+                password,
+                address,
+                path,
+                alias_force,
+            )
+        })?;
+        Ok(keypair_alias.map(|alias| {
+            // Cache the newly added key
+            self.decrypted_key_cache.insert(alias.clone(), sk);
+            alias.into()
+        }))
     }
 }
